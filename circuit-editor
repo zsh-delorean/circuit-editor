@@ -205,8 +205,20 @@ function circuit-editor {
   }
   zle -N prepend-sudo
 
-  # Reset to default key bindings.
-  bindkey -d
+  # Subsumes a foreground application or the current buffer with a new buffer.
+  #   - Foreground application: Backgrounds the application (restore with `fg`).
+  #   - Single line buffer: Hides the current buffer until the new buffer returns.
+  #   - Multiline buffer: Updates the buffer in-place enabling edits to prior lines.
+  function bg-push-line-or-edit() {
+    if [[ $#BUFFER -eq 0 ]]
+    then
+      bg
+      zle redisplay
+    else
+      zle push-line-or-edit
+    fi
+  }
+  zle -N bg-push-line-or-edit
 
   #
   # Emacs Key Bindings
@@ -289,8 +301,8 @@ function circuit-editor {
       bindkey -M "$keymap" "$key" copy-prev-shell-word
 
     # Use a more flexible push-line.
-    for key in "$key_info[Control]Q" "$key_info[Escape]"{q,Q}
-      bindkey -M "$keymap" "$key" push-line-or-edit
+    for key in "$key_info[Control]Z" "$key_info[Escape]"{z,Z}
+      bindkey -M "$keymap" "$key" bg-push-line-or-edit
 
     # Bind Shift + Tab to go to the previous menu item.
     bindkey -M "$keymap" "$key_info[BackTab]" reverse-menu-complete
